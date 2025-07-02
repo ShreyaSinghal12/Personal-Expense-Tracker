@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <img src="s1.jpg" class="img-fluid" width="150" alt="Logo">
+      </a>
+    </div>
+  </nav>
+
+  <div class="container p-5">
+    <div class="mb-3 text-end">
+      <button class="btn btn-outline-primary" onclick="showExpenseModal()">Add Expense</button>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <table class="table text-center">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTableBody">
+            <!-- Expenses will be inserted here -->
+          </tbody>
+        </table>
+        <div class="text-end mt-3">
+          <span><strong>Total Spent: </strong></span><span id="totalSpent" class="text-success fw-bold">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="addExpenseForm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addExpenseModalLabel">Add Expense</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="2" placeholder="Add your expense description"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="amount" class="form-label">Amount</label>
+              <input type="number" class="form-control" id="amount" name="spent" placeholder="Enter amount">
+            </div>
+            <div class="mb-3">
+              <label for="date" class="form-label">Date</label>
+              <input type="date" class="form-control" id="date" name="date">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveExpense()">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showExpenseModal() {
+      $('#addExpenseModal').modal('show');
+    }
+
+    function saveExpense() {
+      const formData = $('#addExpenseForm').serializeArray();
+      const expense = {};
+      formData.forEach(item => expense[item.name] = item.value);
+
+      let expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
+      expenses.push(expense);
+      localStorage.setItem('expenseStorage', JSON.stringify(expenses));
+
+      $('#addExpenseForm')[0].reset();
+      $('#addExpenseModal').modal('hide');
+      renderTable();
+      calculateTotal();
+    }
+
+    function deleteExpense(index) {
+      let expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
+      expenses.splice(index, 1);
+      localStorage.setItem('expenseStorage', JSON.stringify(expenses));
+      renderTable();
+      calculateTotal();
+    }
+
+    function renderTable() {
+      const expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
+      let html = '';
+
+      if (expenses.length > 0) {
+        expenses.forEach((expense, index) => {
+          html += `<tr>
+            <td>${index + 1}</td>
+            <td>${expense.description}</td>
+            <td>${expense.date}</td>
+            <td>${expense.spent}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteExpense(${index})">Remove</button></td>
+          </tr>`;
+        });
+      } else {
+        html = `<tr><td colspan="5">No expense details added yet</td></tr>`;
+      }
+
+      $('#expenseTableBody').html(html);
+    }
+
+    function calculateTotal() {
+      const expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
+      let total = 0;
+      expenses.forEach(expense => {
+        total += parseInt(expense.spent) || 0;
+      });
+      $('#totalSpent').text(total);
+    }
+
+    $(document).ready(() => {
+      renderTable();
+      calculateTotal();
+    });
+  </script>
+</body>
+
+</html>
