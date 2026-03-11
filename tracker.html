@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,139 +7,451 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    html { font-size: 20px; }
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; font-size: 1rem; }
+
+    .navbar { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 20px 40px; }
+    .navbar-brand { font-size: 1.6rem !important; }
+    .navbar .btn { font-size: 1rem; padding: 10px 22px; }
+
+    .container { max-width: 1500px !important; padding: 40px 48px; }
+
+    .summary-card {
+      border-radius: 20px;
+      padding: 32px 40px;
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .card-total     { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+    .card-budget    { background: linear-gradient(135deg, #0891b2, #0e7490); }
+    .card-remaining { background: linear-gradient(135deg, #059669, #047857); }
+    .card-remaining.over-budget { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+
+    .summary-card .label { font-size: 17px; opacity: 0.85; margin-bottom: 8px; }
+    .summary-card .value { font-size: 44px; font-weight: 700; }
+
+    .budget-bar-wrap { height: 14px; background: rgba(255,255,255,0.3); border-radius: 99px; overflow: hidden; margin-top: 12px; }
+    .budget-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; background: #fff; opacity: 0.9; }
+    .budget-bar-fill.warning { background: #fde68a; }
+    .budget-bar-fill.danger  { background: #fca5a5; }
+
+    .badge-category {
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .cat-Food          { background:#fef3c7; color:#92400e; }
+    .cat-Travel        { background:#dbeafe; color:#1e40af; }
+    .cat-Shopping      { background:#fce7f3; color:#9d174d; }
+    .cat-Bills         { background:#fee2e2; color:#991b1b; }
+    .cat-Entertainment { background:#ede9fe; color:#5b21b6; }
+    .cat-Other         { background:#f3f4f6; color:#374151; }
+
+    .chart-card {
+      border-radius: 20px;
+      background: #fff;
+      padding: 36px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .chart-card h5 { font-size: 1.2rem; margin-bottom: 20px; color: #1e293b; }
+
+    .table-card {
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .table-card h5 { font-size: 1.2rem; color: #1e293b; }
+    .table thead th {
+      background: #f1f5f9;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      border: none;
+      padding: 18px 20px;
+    }
+    .table tbody td {
+      vertical-align: middle;
+      border-color: #f1f5f9;
+      font-size: 16px;
+      padding: 18px 20px;
+    }
+
+    .btn-primary          { background: #4f46e5; border-color: #4f46e5; border-radius: 10px; font-size: 1rem; }
+    .btn-primary:hover    { background: #4338ca; border-color: #4338ca; }
+    .btn-outline-secondary { border-radius: 10px; font-size: 1rem; }
+    .btn-danger           { border-radius: 8px; font-size: 14px; padding: 6px 16px; }
+
+    .modal-dialog  { max-width: 600px; }
+    .modal-content { border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .modal-header  { border-bottom: 1px solid #f1f5f9; padding: 28px 32px; }
+    .modal-title   { font-size: 1.3rem; }
+    .modal-footer  { border-top: 1px solid #f1f5f9; padding: 22px 32px; }
+    .modal-body    { padding: 28px 32px; }
+    .form-label    { font-size: 16px; margin-bottom: 6px; }
+    .form-control, .form-select {
+      border-radius: 10px;
+      border-color: #e2e8f0;
+      font-size: 16px;
+      padding: 12px 16px;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+    }
+
+    #noExpenses td { color: #94a3b8; padding: 70px; font-size: 17px; }
+
+    .alert-badge {
+      display: none;
+      border-radius: 14px;
+      padding: 16px 22px;
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+    .warning-badge { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .over-badge    { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  </style>
 </head>
 
-<body class="bg-light">
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">
-        <img src="s1.jpg" class="img-fluid" width="150" alt="Logo">
-      </a>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <span class="navbar-brand fw-bold" style="color:#4f46e5;">💸 Expense Tracker</span>
+    <div class="ms-auto d-flex gap-3">
+      <button class="btn btn-outline-secondary" onclick="showBudgetModal()">⚙️ Set Budget</button>
+      <button class="btn btn-outline-secondary" onclick="exportCSV()">⬇️ Export CSV</button>
+      <button class="btn btn-primary" onclick="showExpenseModal()">+ Add Expense</button>
     </div>
   </nav>
 
-  <div class="container p-5">
-    <div class="mb-3 text-end">
-      <button class="btn btn-outline-primary" onclick="showExpenseModal()">Add Expense</button>
+  <div class="container py-5">
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-4">
+        <div class="summary-card card-total">
+          <div class="label">Total Spent</div>
+          <div class="value">₹<span id="totalSpent">0</span></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="summary-card card-budget">
+          <div class="label">Monthly Budget</div>
+          <div class="value">₹<span id="budgetDisplay">—</span></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="summary-card card-remaining" id="remainingCard">
+          <div class="label">Remaining</div>
+          <div class="value">₹<span id="remainingDisplay">—</span></div>
+          <div class="budget-bar-wrap" id="budgetBarWrap" style="display:none;">
+            <div class="budget-bar-fill" id="budgetBarFill"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-body">
-        <table class="table text-center">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Description</th>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="expenseTableBody">
-            <!-- Expenses will be inserted here -->
-          </tbody>
-        </table>
-        <div class="text-end mt-3">
-          <span><strong>Total Spent: </strong></span><span id="totalSpent" class="text-success fw-bold">0</span>
+
+    <!-- Alerts -->
+    <div class="alert-badge warning-badge" id="warningBadge">⚠️ You have used over 80% of your monthly budget!</div>
+    <div class="alert-badge over-badge"    id="overBadge">🚨 You have exceeded your monthly budget!</div>
+
+    <!-- Chart + Table -->
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="chart-card h-100">
+          <h5 class="fw-bold">Spending by Category</h5>
+          <canvas id="pieChart"></canvas>
+          <p id="noChartMsg" class="text-center text-muted mt-4" style="font-size:15px;">No expenses yet</p>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="table-card">
+          <div class="p-4 pb-0">
+            <h5 class="fw-bold">All Expenses</h5>
+          </div>
+          <div class="table-responsive">
+            <table class="table text-center mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="expenseTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal -->
-  <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+  <!-- Add Expense Modal -->
+  <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-      <form id="addExpenseForm">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addExpenseModalLabel">Add Expense</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="description" class="form-label">Description</label>
-              <textarea class="form-control" id="description" name="description" rows="2" placeholder="Add your expense description"></textarea>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add Expense</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addExpenseForm">
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="2" placeholder="What did you spend on?"></textarea>
             </div>
-            <div class="mb-3">
-              <label for="amount" class="form-label">Amount</label>
-              <input type="number" class="form-control" id="amount" name="spent" placeholder="Enter amount">
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Category</label>
+              <select class="form-select" id="category" name="category">
+                <option value="">Select category</option>
+                <option value="Food">🍔 Food</option>
+                <option value="Travel">✈️ Travel</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Bills">📄 Bills</option>
+                <option value="Entertainment">🎮 Entertainment</option>
+                <option value="Other">📦 Other</option>
+              </select>
             </div>
-            <div class="mb-3">
-              <label for="date" class="form-label">Date</label>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Amount (₹)</label>
+              <input type="number" class="form-control" id="amount" name="spent" placeholder="Enter amount" min="0">
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold">Date</label>
               <input type="date" class="form-control" id="date" name="date">
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="saveExpense()">Save</button>
-          </div>
+          </form>
         </div>
-      </form>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary px-4" onclick="saveExpense()">Save Expense</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Modal -->
+  <div class="modal fade" id="budgetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" style="max-width:420px;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Set Monthly Budget</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label fw-semibold">Budget Amount (₹)</label>
+          <input type="number" class="form-control" id="budgetInput" placeholder="e.g. 10000" min="0">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary px-4" onclick="saveBudget()">Save Budget</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    function showExpenseModal() {
-      $('#addExpenseModal').modal('show');
+    const CATEGORY_COLORS = {
+      Food:          '#f59e0b',
+      Travel:        '#3b82f6',
+      Shopping:      '#ec4899',
+      Bills:         '#ef4444',
+      Entertainment: '#8b5cf6',
+      Other:         '#6b7280'
+    };
+
+    let pieChart = null;
+
+    function initChart() {
+      const ctx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: [],
+            borderWidth: 3,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { padding: 16, font: { size: 14 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ₹${ctx.parsed.toLocaleString()} (${Math.round(ctx.parsed / ctx.dataset.data.reduce((a,b)=>a+b,0)*100)}%)`
+              }
+            }
+          },
+          cutout: '58%'
+        }
+      });
     }
 
+    function updateChart(expenses) {
+      const totals = {};
+      expenses.forEach(e => {
+        const cat = e.category || 'Other';
+        totals[cat] = (totals[cat] || 0) + (parseFloat(e.spent) || 0);
+      });
+      const labels = Object.keys(totals);
+      const data   = Object.values(totals);
+      const colors = labels.map(l => CATEGORY_COLORS[l] || '#6b7280');
+
+      pieChart.data.labels                       = labels;
+      pieChart.data.datasets[0].data            = data;
+      pieChart.data.datasets[0].backgroundColor = colors;
+      pieChart.update();
+
+      document.getElementById('noChartMsg').style.display = labels.length ? 'none'  : 'block';
+      document.getElementById('pieChart').style.display   = labels.length ? 'block' : 'none';
+    }
+
+    function showExpenseModal() { $('#addExpenseModal').modal('show'); }
+    function showBudgetModal()  { $('#budgetModal').modal('show'); }
+
     function saveExpense() {
-      const formData = $('#addExpenseForm').serializeArray();
-      const expense = {};
-      formData.forEach(item => expense[item.name] = item.value);
+      const description = $('#description').val().trim();
+      const category    = $('#category').val();
+      const spent       = $('#amount').val();
+      const date        = $('#date').val();
+
+      if (!description || !spent || !date || !category) {
+        alert('Please fill in all fields including category.');
+        return;
+      }
 
       let expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
-      expenses.push(expense);
+      expenses.push({ description, category, spent, date });
       localStorage.setItem('expenseStorage', JSON.stringify(expenses));
 
       $('#addExpenseForm')[0].reset();
       $('#addExpenseModal').modal('hide');
-      renderTable();
-      calculateTotal();
+      refresh();
     }
 
     function deleteExpense(index) {
+      if (!confirm('Remove this expense?')) return;
       let expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
       expenses.splice(index, 1);
       localStorage.setItem('expenseStorage', JSON.stringify(expenses));
-      renderTable();
-      calculateTotal();
+      refresh();
     }
 
-    function renderTable() {
-      const expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
-      let html = '';
+    function saveBudget() {
+      const val = parseFloat($('#budgetInput').val());
+      if (!val || val <= 0) { alert('Please enter a valid budget amount.'); return; }
+      localStorage.setItem('monthlyBudget', val);
+      $('#budgetModal').modal('hide');
+      refresh();
+    }
 
+    function renderTable(expenses) {
+      let html = '';
       if (expenses.length > 0) {
-        expenses.forEach((expense, index) => {
+        expenses.forEach((e, i) => {
+          const cat = e.category || 'Other';
           html += `<tr>
-            <td>${index + 1}</td>
-            <td>${expense.description}</td>
-            <td>${expense.date}</td>
-            <td>${expense.spent}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteExpense(${index})">Remove</button></td>
+            <td class="text-muted">${i + 1}</td>
+            <td style="text-align:left; padding-left:24px; font-size:16px;">${e.description}</td>
+            <td><span class="badge-category cat-${cat}">${cat}</span></td>
+            <td style="color:#64748b;">${e.date}</td>
+            <td class="fw-semibold" style="color:#1e293b;">₹${parseFloat(e.spent).toLocaleString()}</td>
+            <td>
+              <button class="btn btn-danger" onclick="deleteExpense(${i})">Remove</button>
+            </td>
           </tr>`;
         });
       } else {
-        html = `<tr><td colspan="5">No expense details added yet</td></tr>`;
+        html = `<tr id="noExpenses"><td colspan="6">No expenses added yet. Click "+ Add Expense" to get started.</td></tr>`;
       }
-
       $('#expenseTableBody').html(html);
     }
 
-    function calculateTotal() {
+    function calculateAndDisplay(expenses) {
+      const total  = expenses.reduce((sum, e) => sum + (parseFloat(e.spent) || 0), 0);
+      const budget = parseFloat(localStorage.getItem('monthlyBudget')) || 0;
+
+      $('#totalSpent').text(total.toLocaleString());
+
+      if (budget > 0) {
+        const remaining = budget - total;
+        const pct       = Math.min((total / budget) * 100, 100);
+
+        $('#budgetDisplay').text(budget.toLocaleString());
+        $('#remainingDisplay').text(remaining >= 0 ? remaining.toLocaleString() : '0');
+        $('#budgetBarWrap').show();
+
+        const fill = $('#budgetBarFill');
+        fill.css('width', pct + '%');
+        fill.removeClass('warning danger');
+        if (pct >= 100)     fill.addClass('danger');
+        else if (pct >= 80) fill.addClass('warning');
+
+        $('#warningBadge').hide();
+        $('#overBadge').hide();
+        if (pct >= 100) {
+          $('#overBadge').show();
+          $('#remainingCard').addClass('over-budget');
+        } else if (pct >= 80) {
+          $('#warningBadge').show();
+          $('#remainingCard').removeClass('over-budget');
+        } else {
+          $('#remainingCard').removeClass('over-budget');
+        }
+      } else {
+        $('#budgetDisplay').text('—');
+        $('#remainingDisplay').text('—');
+        $('#budgetBarWrap').hide();
+        $('#warningBadge').hide();
+        $('#overBadge').hide();
+      }
+    }
+
+    function exportCSV() {
       const expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
-      let total = 0;
-      expenses.forEach(expense => {
-        total += parseInt(expense.spent) || 0;
+      if (expenses.length === 0) { alert('No expenses to export.'); return; }
+
+      let csv = 'No,Description,Category,Date,Amount\n';
+      expenses.forEach((e, i) => {
+        csv += `${i+1},"${e.description}","${e.category || 'Other'}","${e.date}",${e.spent}\n`;
       });
-      $('#totalSpent').text(total);
+      const total = expenses.reduce((s, e) => s + (parseFloat(e.spent)||0), 0);
+      csv += `\nTotal,,,, ${total}`;
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `expenses_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function refresh() {
+      const expenses = JSON.parse(localStorage.getItem('expenseStorage')) || [];
+      renderTable(expenses);
+      calculateAndDisplay(expenses);
+      updateChart(expenses);
     }
 
     $(document).ready(() => {
-      renderTable();
-      calculateTotal();
+      initChart();
+      document.getElementById('pieChart').style.display = 'none';
+      refresh();
     });
   </script>
 </body>
-
 </html>
